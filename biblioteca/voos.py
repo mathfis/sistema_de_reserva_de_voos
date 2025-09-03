@@ -23,12 +23,22 @@ class Voo:
         if assento_id in self.assentos_reservados:
             return False
         
-        # Cria a reserva no usuário
-        if usuario.criar_reserva(self.voo_id, assento_id):
-            self.assentos_reservados[assento_id] = usuario.cpf
-            return True
+        # Obtém informações do assento para validação
+        layout = self.aviao.gerar_layout()
+        assento_info = layout.get(assento_id)
         
-        return False
+        if assento_info:
+            # Verifica regra de idade para assentos de emergência
+            if assento_info.get('emergencia', False) and hasattr(usuario, 'eh_maior_de_idade') and not usuario.eh_maior_de_idade():
+                raise ValueError("Menores de 18 anos não podem reservar assentos de emergência")
+            
+            # Verifica se o assento está bloqueado
+            if assento_info.get('bloqueado', False):
+                raise ValueError("Assento {} indisponível".format(assento_id))
+        
+        # Cria a reserva
+        self.assentos_reservados[assento_id] = usuario.cpf
+        return True
     
     def cancelar_reserva(self, usuario, assento_id):
         """
@@ -42,12 +52,9 @@ class Voo:
         if self.assentos_reservados[assento_id] != usuario.cpf:
             return False
         
-        # Cancela a reserva no usuário
-        if usuario.cancelar_reserva(self.voo_id, assento_id):
-            del self.assentos_reservados[assento_id]
-            return True
-        
-        return False
+        # Remove a reserva
+        del self.assentos_reservados[assento_id]
+        return True
     
     def listar_assentos(self):
         """
@@ -56,13 +63,13 @@ class Voo:
         Status: 'livre', 'reservado'
         """
         status_assentos = {}
-        todos_assentos = self.aviao.obter_assentos()
+        layout = self.aviao.gerar_layout()
         
-        for assento in todos_assentos:
-            if assento in self.assentos_reservados:
-                status_assentos[assento] = 'reservado'
+        for assento_id in layout.keys():
+            if assento_id in self.assentos_reservados:
+                status_assentos[assento_id] = 'reservado'
             else:
-                status_assentos[assento] = 'livre'
+                status_assentos[assento_id] = 'livre'
         
         return status_assentos
     
@@ -71,7 +78,7 @@ class Voo:
         return "{};{};{};{};{}".format(self.voo_id, self.aviao.aviao_id, self.origem, self.destino, self.data_hora)
     
     @classmethod
-    def from_string(cls, linha, aviao):
+    def from_string(cls, linha, avioes_list):
         """Cria um objeto Voo a partir de uma string do arquivo"""
         dados = linha.strip().split(';')
         if len(dados) != 5:
@@ -79,11 +86,17 @@ class Voo:
         
         voo_id, aviao_id, origem, destino, data_hora = dados
         
-        # Verifica se o avião corresponde
-        if aviao.aviao_id != aviao_id:
-            raise ValueError("ID do avião não corresponde")
+        # Encontrar o avião correspondente
+        aviao_encontrado = None
+        for aviao in avioes_list:
+            if aviao.aviao_id == aviao_id:
+                aviao_encontrado = aviao
+                break
         
-        return cls(voo_id, aviao, origem, destino, data_hora)
+        if not aviao_encontrado:
+            raise ValueError("Avião {} não encontrado".format(aviao_id))
+        
+        return cls(voo_id, aviao_encontrado, origem, destino, data_hora)
 
 
 # Gerenciador de voos com persistência
@@ -93,7 +106,7 @@ class GerenciadorVoos:
         self.voos = {}
         self.lock_file = caminho_arquivo + ".lock"
     
-    def carregar_voos(self, gerenciador_avioes):
+    def carregar_voos(self, avioes_list):
         """Carrega voos do arquivo com controle de concorrência"""
         while os.path.exists(self.lock_file):
             time.sleep(0.1)  # Espera se o arquivo estiver bloqueado
@@ -106,10 +119,11 @@ class GerenciadorVoos:
             if not os.path.exists(self.caminho_arquivo):
                 return
             
+            self.voos = {}
             with open(self.caminho_arquivo, 'r', encoding='utf-8') as f:
                 for linha in f:
                     try:
-                        voo = Voo.from_string(linha, gerenciador_avioes)
+                        voo = Voo.from_string(linha, avioes_list)
                         self.voos[voo.voo_id] = voo
                     except ValueError as e:
                         print("Erro ao carregar voo: {}".format(e))
@@ -180,21 +194,42 @@ class AssentoJaReservadoError(ErroReservaAssento):
 class AssentoInvalidoError(ErroReservaAssento):
     pass
 
-#TESTAGEM
+
 if __name__ == '__main__':
     # Teste mínimo completo da classe Voo
     print("=== TESTE MÍNIMO VOO ===")
     
-    # Mocks simplificados
+    # Mocks simplificados COMPATÍVEIS
     class AviaoMock:
-        def __init__(self): self.aviao_id = "A320-001"; self.assentos = ["1A", "1B"]
-        def validar_assento(self, assento): return assento in self.assentos
-        def obter_assentos(self): return self.assentos
+        def __init__(self): 
+            self.aviao_id = "A320-001"
+            self.assentos = ["1A", "1B"]
+        
+        def validar_assento(self, assento): 
+            return assento in self.assentos
+        
+        def obter_assentos(self): 
+            return self.assentos
+        
+        def gerar_layout(self):
+            return {
+                "1A": {"posicao": "janela", "classe": "econômica", "emergencia": True, "valor": 150.00, "bloqueado": False},
+                "1B": {"posicao": "meio", "classe": "econômica", "emergencia": False, "valor": 150.00, "bloqueado": False}
+            }
     
     class UsuarioMock:
-        def __init__(self): self.cpf = "123.456.789-00"
-        def criar_reserva(self, voo_id, assento): return True
-        def cancelar_reserva(self, voo_id, assento): return True
+        def __init__(self): 
+            self.cpf = "123.456.789-00"
+            self.idade = 25
+        
+        def eh_maior_de_idade(self):
+            return True
+        
+        def criar_reserva(self, voo_id, assento_id, valor=None):
+            return True
+        
+        def cancelar_reserva(self, voo_id, assento_id):
+            return True
     
     # Teste rápido
     aviao = AviaoMock()
@@ -203,9 +238,23 @@ if __name__ == '__main__':
     
     # Testa tudo em sequência mínima
     print("Assentos inicial:", voo.listar_assentos())
-    voo.reservar_assento(usuario, "1A")
-    print("Após reserva 1A:", voo.listar_assentos())
-    voo.cancelar_reserva(usuario, "1A")
+    
+    # Teste de reserva
+    try:
+        resultado = voo.reservar_assento(usuario, "1A")
+        print("Reserva do assento 1A:", "Sucesso" if resultado else "Falha")
+    except Exception as e:
+        print("Erro na reserva:", e)
+    
+    print("Após reserva:", voo.listar_assentos())
+    
+    # Teste de cancelamento
+    try:
+        resultado = voo.cancelar_reserva(usuario, "1A")
+        print("Cancelamento do assento 1A:", "Sucesso" if resultado else "Falha")
+    except Exception as e:
+        print("Erro no cancelamento:", e)
+    
     print("Após cancelamento:", voo.listar_assentos())
     print("Serialização:", voo.to_string())
     

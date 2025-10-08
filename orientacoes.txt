@@ -1,3 +1,0 @@
-Como abrir o pdf direto do terminal pelo chrome
-
-chrome file:///C:/Users/mlara/Tec/Python/PIG/AD1_PIG_2025-2/ad1_pig_2025-2.pdf

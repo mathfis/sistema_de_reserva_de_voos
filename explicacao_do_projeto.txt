@@ -1,0 +1,72 @@
+EXPLICAÇÃO DO PROJETO - SISTEMA DE RESERVA DE VOOS
+
+1.  CLASSES PRINCIPAIS
+
+Classe Aviao (arquivo avioes.py): - Representa uma aeronave da companhia
+aérea. - Possui identificador, modelo, número de fileiras e assentos por
+fileira. - Método gerar_layout cria um dicionário com todos os assentos,
+incluindo posição (janela, meio, corredor), classe (primeira, executiva,
+econômica), valor do assento, se é de emergência e se está bloqueado. -
+Método validar_assento verifica se um assento existe no avião. - Há
+funções auxiliares para carregar e salvar aviões em arquivo de texto.
+
+Classe Usuario (arquivo usuarios.py): - Representa um passageiro do
+sistema. - Contém dados pessoais: CPF, nome, data de nascimento,
+e-mail. - Mantém uma lista de reservas associadas ao usuário. - Métodos
+permitem criar, cancelar e modificar reservas. - Inclui regras de
+negócio: apenas um assento por voo, bloqueio de assentos de emergência
+para menores de 18 anos. - Inclui funções para carregar e salvar
+usuários em arquivo de texto.
+
+Classe Voo (arquivo voos.py): - Representa um voo da companhia aérea. -
+Possui identificador, avião associado, origem, destino, data e hora. -
+Métodos permitem reservar e cancelar assentos, verificar status de todos
+os assentos e serializar/deserializar dados para arquivo. - Mantém um
+dicionário de assentos reservados. - Verifica regras de assentos de
+emergência e bloqueio.
+
+Classe GerenciadorVoos (arquivo voos.py): - Responsável por gerenciar a
+coleção de voos. - Permite carregar e salvar voos em arquivo de texto
+com controle de concorrência usando lock file. - Permite adicionar,
+buscar e listar voos.
+
+2.  PROGRAMA PRINCIPAL
+
+Arquivo main.py: - Implementa a interface de linha de comando interativa
+para os usuários. - Exibe menus principais e menus de usuário logado. -
+Permite operações como: cadastrar usuário, listar usuários, visualizar
+voos, visualizar assentos de um voo, fazer reservas, cancelar e
+modificar reservas, além de verificar reservas ativas. - É o sistema a
+ser executado de fato pelo usuário final.
+
+3.  PROGRAMA DE SIMULAÇÃO
+
+Arquivo cli_simulada.py: - Implementa uma simulação automatizada do uso
+do sistema. - Executa em sequência todas as operações principais:
+cadastro de usuários, configuração de aviões e voos, login, visualização
+de layout, reserva de assentos, verificação de regra de emergência,
+cancelamento, modificação e resumo final. - Serve para validar se o
+sistema implementado atende aos requisitos da atividade.
+
+4.  TIPIFICAÇÃO DOS DADOS
+
+Formato dos arquivos de dados (armazenados na pasta dados/):
+
+-   avioes.txt Formato: aviao_id;modelo;fileiras;assentos_por_fileira
+    Exemplo: BOEING-001;B737;30;6
+
+-   usuarios.txt Formato: cpf;nome;data_nascimento;email;reservas
+    Reservas são representadas por pares voo_id-assento separados por
+    vírgula. Exemplo: 529.982.247-25;João
+    Silva;15/05/1990;joao@email.com;V001-7C
+
+-   voos.txt Formato: voo_id;aviao_id;origem;destino;data_hora Exemplo:
+    V001;BOEING-001;São Paulo;Rio de Janeiro;2024-03-15 08:00
+
+5.  CONCLUSÃO
+
+O projeto implementa um sistema de reservas de assentos em voos com uso
+de programação orientada a objetos em Python, atendendo aos requisitos
+da atividade da disciplina. Inclui controle de dados persistentes em
+arquivos texto, regras de negócio, interface de linha de comando e
+simulação de operações.

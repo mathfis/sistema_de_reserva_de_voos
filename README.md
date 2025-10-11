@@ -1,38 +1,132 @@
 # ✈️ Sistema de Reserva de Voos
-AD1 – Programação com Interfaces Gráficas (PIG) – 2025.2
+AD2 – Programação com Interfaces Gráficas (PIG) – 2025.2
 
-Instituição: Fundação CECIERJ / Consórcio CEDERJ
-Curso: Tecnologia em Sistemas de Computação
-Disciplina: Programação com Interfaces Gráficas (EAD05030)
+Instituição: Fundação CECIERJ / Consórcio CEDERJ  
+Curso: Tecnologia em Sistemas de Computação  
+Disciplina: Programação com Interfaces Gráficas (EAD05030)  
 _____________
+
 ## 📘 Visão Geral
 
-Este projeto implementa um sistema de reservas de assentos em voos comerciais, utilizando programação orientada a objetos em Python.
-Na AD1, foi desenvolvido o backend completo, com persistência em arquivos texto e interface em linha de comando (CLI).
-Na AD2, este sistema servirá como base para o desenvolvimento da interface gráfica (frontend) usando tkinter.
+Este projeto implementa um **sistema de reservas de assentos em voos comerciais**, utilizando **Python e orientação a objetos**.  
 
-## Estrutura do Projeto
+Na **AD1**, foi desenvolvido o **backend completo**, com persistência em arquivos texto e interface em linha de comando (CLI).  
+Na **AD2**, está sendo implementada a **interface gráfica (frontend)** em **Tkinter**, que permitirá ao usuário interagir visualmente com o sistema.
+
+---
+
+## 💡 Estágio Atual (AD2)
+
+O sistema gráfico está **100% operacional** — já é possível **navegar entre as telas principais** e validar os **fluxos visuais**.  
+Nenhuma parte ainda acessa o backend, mas toda a estrutura está pronta para receber integração.
+
+### 🧭 Estrutura atual
 
 ```graphql
-AD1_PIG_2025-2/
+App (tk.Tk)
+│
+├── TelaLogin
+│ ├── Campo CPF
+│ ├── Campo Senha
+│ ├── Botões: Entrar / Cadastrar
+│
+├── TelaCadastro
+│ ├── Campos: CPF, Nome, Data, Email
+│ ├── Botões: Salvar / Voltar
+│
+└── TelaPainel
+├── Botões: Visualizar Voos / Minhas Reservas / Sair
+```
+
+### 🖼️ Fluxo de Navegação
+
+```shell
+[ TelaLogin ]
+↓
+[ TelaCadastro ] ←→ [ TelaPainel ]
+```
+
+---
+
+## ✈️ Próximas Etapas (Planejamento de Implementação)
+
+| Etapa | Tarefa | Backend Necessário? | Descrição |
+|-------|---------|----------------------|------------|
+| 2 | ✅ Autenticação real de usuário | ✅ | Ler `dados/usuarios.txt`, verificar CPF com `carregar_usuarios()` e permitir login real. |
+| 3 | ✅ Cadastro real de novo usuário | ✅ | Criar novo `Usuario`, validar CPF e salvar com `salvar_usuarios()`. |
+| 4 | 🛫 Tela de seleção de voos | ✅ | Listar voos de `GerenciadorVoos.listar_voos()` e exibir dados (origem, destino, data). |
+| 5 | 💺 Tela de seleção de assentos | ✅ | Exibir layout do avião (`Aviao.gerar_layout()`), colorindo por status (livre/reservado/emergência). |
+| 6 | 💳 Tela de confirmação de reserva | ✅ | Mostrar resumo (voo + assento + valor) e confirmar reserva (`Usuario.criar_reserva()` + `Voo.reservar_assento()`). |
+| 7 | 📋 Tela “Minhas Reservas” | ✅ | Exibir reservas do usuário logado e permitir cancelar/modificar (`Usuario.cancelar_reserva()`). |
+| 8 | 🎨 Refinamento visual | ❌ | Ajustar layout, cores, ícones e responsividade. |
+| 9 | 🧪 Testes e Validação | ❌ | Testar fluxos (login, reserva, cancelamento, etc.). |
+
+---
+
+## 📊 Mapa de Progresso
+
+| Categoria | Progresso |
+|------------|------------|
+| Estrutura base (Tkinter + navegação) | 🟢 100% |
+| Login e cadastro visuais | 🟢 100% |
+| Integração com backend (usuário, voos, assentos) | 🟡 0% |
+| Layout visual de assentos | ⚪ 0% |
+| Confirmação e persistência | ⚪ 0% |
+| Testes e ajustes finais | ⚪ 0% |
+
+---
+
+## 🧩 Estrutura Final Planejada
+```graphql
+App (tk.Tk)
+│
+├── TelaLogin → autenticação via carregar_usuarios()
+├── TelaCadastro → criação via salvar_usuarios()
+├── TelaPainel → acesso a TelaVoos / TelaReservas
+│
+├── TelaVoos
+│ ├── Lista de voos (origem, destino, data)
+│ └── Seleção → TelaAssentos
+│
+├── TelaAssentos
+│ ├── Layout visual (grid de botões)
+│ ├── Cores: verde=livre, vermelho=ocupado, amarelo=emergência
+│ └── Selecionar assento → TelaPagamento
+│
+├── TelaPagamento
+│ ├── Resumo (voo + assento + valor)
+│ └── Confirmação → salvar reserva
+│
+└── TelaReservas
+├── Listagem de reservas do usuário
+└── Cancelar / Alterar assento
+```
+
+---
+
+## 🧱 Estrutura do Projeto (Backend + Frontend)
+
+```graphql
+sistema_de_reserva_de_voos/
 │
 ├── biblioteca/
-│   ├── __pycache__/              # Cache automático do Python
-│   ├── avioes.py                 # Classe Aviao + funções de persistência
-│   ├── usuarios.py               # Classe Usuario + regras de reserva e idade
-│   └── voos.py                   # Classes Voo e GerenciadorVoos
+│   ├── avioes.py
+│   ├── usuarios.py
+│   └── voos.py
 │
 ├── dados/
-│   ├── avioes.txt                # Banco de dados de aeronaves
-│   ├── usuarios.txt              # Banco de dados de passageiros
-│   └── voos.txt                  # Banco de dados de voos
+│   ├── avioes.txt
+│   ├── usuarios.txt
+│   └── voos.txt
 │
-├── cli_simulada.py               # Simulação automatizada de uso do sistema
-├── main.py                       # Interface CLI interativa (menu principal)
-├── explicacao_do_projeto.txt     # Documento descritivo das classes e lógica
-└── README.md                     # (este arquivo)
+├── cli_simulada.py 
+├── main.py                 # CLI (AD1)
+├── main_gui.py             # GUI (Tkinter – AD2)
+└── README.md
 ```
-## ⚙️ Execução
+
+## ⚙️ Execução (na CLI)
+
 ### 🔹 Requisitos
 
 Python 3.8 ou superior

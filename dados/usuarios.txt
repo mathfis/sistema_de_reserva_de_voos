@@ -1,2 +1,3 @@
-529.982.247-25;João Silva;15/05/1990;joao@email.com;V001-7C
+529.982.247-25;João Silva;15/05/1990;joao@email.com;1234;V001-7C
 111.222.333-44;Maria Souza;01/01/2010;maria@email.com;
+123.456.789-10;Maria Teste;01012000;maria@teste.com;1234

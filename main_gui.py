@@ -140,23 +140,4 @@ if __name__ == "__main__":
     app = App()
     app.mainloop()
 
-
-
-# # 1. Janela Principal
-
-# root = tk.Tk()
-
-# # 2.  Configurar Título
-
-# root.title("Sistema de Reserva de Voos")
-# root.geometry("800x600")
-
-# # 3. Adicionar Widgets
-
-# label = tk.Label(root, text="Bem-Vindo!")
-# label.pack()
-
-# # 4. Iniciar o loop de eventos
-
-# root.mainloop()
-
+    

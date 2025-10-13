@@ -1,12 +1,15 @@
+#biblioteca/usuarios.py
+
 import os
 from datetime import datetime
 
 class Usuario:
-    def __init__(self, cpf: str, nome: str, data_nascimento: str, email: str):
-        self.cpf = self.validar_cpf(cpf)
+    def __init__(self, cpf: str, nome: str, data_nascimento: str, email: str,senha:str, validar: bool = True):
+        self.cpf = self.validar_cpf(cpf) if validar else cpf
         self.nome = nome
         self.data_nascimento = data_nascimento
         self.email = email
+        self.senha = senha
         self.reservas = []
         
     @staticmethod
@@ -126,11 +129,12 @@ def carregar_usuarios() -> list:
                         data_nascimento = partes[2]
                         email = partes[3]
                         
-                        usuario = Usuario(cpf, nome, data_nascimento, email)
+                        senha = partes[4] if len(partes) > 4 else ""
+                        usuario = Usuario(cpf, nome, data_nascimento, email, senha, validar=False)
                         
                         # Carregar reservas se existirem
-                        if len(partes) > 4 and partes[4]:
-                            for reserva_str in partes[4].split(','):
+                        if len(partes) > 5 and partes[5]:
+                            for reserva_str in partes[5].split(','):
                                 if '-' in reserva_str:
                                     voo_id, assento_id = reserva_str.split('-', 1)
                                     usuario.reservas.append({
@@ -158,13 +162,42 @@ def salvar_usuarios(usuarios: list):
     with open('dados/usuarios.txt', 'w', encoding='utf-8') as file:
         for usuario in usuarios:
             reservas_str = ','.join([
-                f"{r['voo_id']}-{r['assento_id']}" 
-                for r in usuario.reservas 
-                if r['status'] == 'confirmada'
-            ])
-            
-            linha = f"{usuario.cpf};{usuario.nome};{usuario.data_nascimento};{usuario.email};{reservas_str}\n"
+                f"{r['voo_id']}-{r['assento_id']}"
+                for r in usuario.reservas
+                if r.get('status') == 'confirmada'
+                ])
+            linha = f"{usuario.cpf};{usuario.nome};{usuario.data_nascimento};{usuario.email};{usuario.senha};{reservas_str}\n"
             file.write(linha)
+
+
+def salvar_usuario_unico(novo_usuario: Usuario):
+    """Adiciona um novo usuário ao arquivo, se ainda não existir."""
+    os.makedirs('dados', exist_ok=True)
+    caminho = 'dados/usuarios.txt'
+
+    # Garante que o arquivo existe
+    if not os.path.exists(caminho):
+        with open(caminho, 'w', encoding='utf-8') as f:
+            pass
+
+    # Verifica duplicidade de CPF
+    usuarios_existentes = carregar_usuarios()
+    for u in usuarios_existentes:
+        if u.cpf == novo_usuario.cpf:
+            raise ValueError(f"O usuário com CPF {u.cpf} já está cadastrado.")
+
+    # Serializa o novo usuário
+    reservas_str = ','.join([
+        f"{r['voo_id']}-{r['assento_id']}"
+        for r in novo_usuario.reservas
+        if r.get('status') == 'confirmada'
+    ])
+    
+    linha = f"{novo_usuario.cpf};{novo_usuario.nome};{novo_usuario.data_nascimento};{novo_usuario.email};{novo_usuario.senha}\n"
+
+    with open(caminho, 'a', encoding='utf-8') as f:
+        f.write(linha)
+
 
 # TESTE SIMPLES
 if __name__ == "__main__":

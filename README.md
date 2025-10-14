@@ -8,8 +8,6 @@ _____________
 
 ## 📘 Visão Geral
 
-📘 Visão Geral
-
 Este projeto implementa um sistema completo de reservas de assentos em voos comerciais, desenvolvido em Python com orientação a objetos e interface gráfica em Tkinter.
 
 A aplicação permite cadastro e login de usuários, listagem de voos, seleção visual de assentos e confirmação de reservas, com persistência local em arquivos .txt.

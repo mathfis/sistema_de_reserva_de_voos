@@ -1,1 +1,3 @@
-123.456.789-00;Teste;01/01/1990;teste@teste.com;1234;V002-7F,V003-7F,V001-8F,V004-8F
+123.456.789-00;João Silva;15/05/1990;joao.silva@email.com;senha123;
+987.654.321-00;Maria Santos;20/08/2005;maria.santos@email.com;senha456;
+111.222.333-44;Carlos Oliveira;10/12/1985;carlos.oliveira@email.com;senha789;

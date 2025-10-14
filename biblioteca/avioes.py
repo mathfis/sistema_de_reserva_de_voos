@@ -89,33 +89,10 @@ def carregar_avioes(arquivo: str = "dados/avioes.txt") -> list:
     return avioes
 
 
-def salvar_avioes(avioes: list, arquivo: str = "dados/avioes.txt"):
+def salvar_avioes(avioes: list, arquivo: str = "dados/avioes_teste.txt"):
+    # importante para testagem
     """Salva lista de aviões em arquivo texto no formato especificado"""
     with open(arquivo, 'w', encoding='utf-8') as f:
         for aviao in avioes:
             linha = f"{aviao.aviao_id};{aviao.modelo};{aviao.fileiras};{aviao.assentos_por_fileira}\n"
             f.write(linha)
-
-
-if __name__ == '__main__':
-    # Criar avião de teste
-    aviao = Aviao("B737", "Boeing 737", 30, 6)
-
-    # Testar geração de layout com novos campos
-    layout = aviao.gerar_layout()
-    print("Exemplo de assentos gerados (com novos campos):")
-    print("1A (emergência):", layout["1A"])
-    print("7C (executiva):", layout["7C"])  
-    print("15B (econômica):", layout["15B"])
-    print("30F (emergência):", layout["30F"])
-
-    # Testar validação de assentos
-    print("\nValidação de assentos:")
-    print("1A válido:", aviao.validar_assento("1A"))
-    print("31A válido:", aviao.validar_assento("31A"))
-
-    # Testar persistência
-    avioes = [aviao]
-    salvar_avioes(avioes)
-    avioes_carregados = carregar_avioes()
-    print(f"\nAviões carregados: {len(avioes_carregados)}")

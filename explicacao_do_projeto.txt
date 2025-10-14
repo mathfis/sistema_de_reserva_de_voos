@@ -1,72 +1,166 @@
-EXPLICAÇÃO DO PROJETO - SISTEMA DE RESERVA DE VOOS
+EXPLICAÇÃO DO PROJETO – SISTEMA DE RESERVA DE VOOS (VERSÃO FINAL - AD2)
+1. ESTRUTURA GERAL
 
-1.  CLASSES PRINCIPAIS
+O projeto é um sistema de reservas de voos desenvolvido em Python, utilizando programação orientada a objetos e persistência de dados em arquivos texto.
+Nesta versão, foi implementada também uma interface gráfica (GUI) em Tkinter e um módulo de testes automatizados que valida o funcionamento de todas as partes do sistema.
 
-Classe Aviao (arquivo avioes.py): - Representa uma aeronave da companhia
-aérea. - Possui identificador, modelo, número de fileiras e assentos por
-fileira. - Método gerar_layout cria um dicionário com todos os assentos,
-incluindo posição (janela, meio, corredor), classe (primeira, executiva,
-econômica), valor do assento, se é de emergência e se está bloqueado. -
-Método validar_assento verifica se um assento existe no avião. - Há
-funções auxiliares para carregar e salvar aviões em arquivo de texto.
+A estrutura do projeto é organizada em dois níveis principais:
 
-Classe Usuario (arquivo usuarios.py): - Representa um passageiro do
-sistema. - Contém dados pessoais: CPF, nome, data de nascimento,
-e-mail. - Mantém uma lista de reservas associadas ao usuário. - Métodos
-permitem criar, cancelar e modificar reservas. - Inclui regras de
-negócio: apenas um assento por voo, bloqueio de assentos de emergência
-para menores de 18 anos. - Inclui funções para carregar e salvar
-usuários em arquivo de texto.
+biblioteca/ -> contém os módulos do backend:
+usuarios.py, avioes.py e voos.py.
 
-Classe Voo (arquivo voos.py): - Representa um voo da companhia aérea. -
-Possui identificador, avião associado, origem, destino, data e hora. -
-Métodos permitem reservar e cancelar assentos, verificar status de todos
-os assentos e serializar/deserializar dados para arquivo. - Mantém um
-dicionário de assentos reservados. - Verifica regras de assentos de
-emergência e bloqueio.
+main_gui.py -> programa principal com a interface gráfica.
 
-Classe GerenciadorVoos (arquivo voos.py): - Responsável por gerenciar a
-coleção de voos. - Permite carregar e salvar voos em arquivo de texto
-com controle de concorrência usando lock file. - Permite adicionar,
-buscar e listar voos.
+teste_backend.py -> programa que executa testes automáticos de todas as classes.
 
-2.  PROGRAMA PRINCIPAL
+dados/ -> contém os arquivos persistentes usuarios.txt, avioes.txt e voos.txt.
 
-Arquivo main.py: - Implementa a interface de linha de comando interativa
-para os usuários. - Exibe menus principais e menus de usuário logado. -
-Permite operações como: cadastrar usuário, listar usuários, visualizar
-voos, visualizar assentos de um voo, fazer reservas, cancelar e
-modificar reservas, além de verificar reservas ativas. - É o sistema a
-ser executado de fato pelo usuário final.
+2. MÓDULOS DO BACKEND
+Classe Aviao (avioes.py)
 
-3.  PROGRAMA DE SIMULAÇÃO
+Representa uma aeronave disponível no sistema.
 
-Arquivo cli_simulada.py: - Implementa uma simulação automatizada do uso
-do sistema. - Executa em sequência todas as operações principais:
-cadastro de usuários, configuração de aviões e voos, login, visualização
-de layout, reserva de assentos, verificação de regra de emergência,
-cancelamento, modificação e resumo final. - Serve para validar se o
-sistema implementado atende aos requisitos da atividade.
+Armazena identificador, modelo, número de fileiras e assentos por fileira.
 
-4.  TIPIFICAÇÃO DOS DADOS
+O método gerar_layout() cria um dicionário com todos os assentos do avião, indicando:
 
-Formato dos arquivos de dados (armazenados na pasta dados/):
+posição (janela, meio, corredor);
 
--   avioes.txt Formato: aviao_id;modelo;fileiras;assentos_por_fileira
-    Exemplo: BOEING-001;B737;30;6
+classe (primeira, executiva, econômica);
 
--   usuarios.txt Formato: cpf;nome;data_nascimento;email;reservas
-    Reservas são representadas por pares voo_id-assento separados por
-    vírgula. Exemplo: 529.982.247-25;João
-    Silva;15/05/1990;joao@email.com;V001-7C
+se o assento é de emergência;
 
--   voos.txt Formato: voo_id;aviao_id;origem;destino;data_hora Exemplo:
-    V001;BOEING-001;São Paulo;Rio de Janeiro;2024-03-15 08:00
+valor e bloqueio.
 
-5.  CONCLUSÃO
+Possui método validar_assento() que confirma se um assento existe.
 
-O projeto implementa um sistema de reservas de assentos em voos com uso
-de programação orientada a objetos em Python, atendendo aos requisitos
-da atividade da disciplina. Inclui controle de dados persistentes em
-arquivos texto, regras de negócio, interface de linha de comando e
-simulação de operações.
+Funções auxiliares carregar_avioes() e salvar_avioes() fazem a leitura e gravação no arquivo avioes.txt.
+
+Classe Usuario (usuarios.py)
+
+Modela o passageiro cadastrado.
+
+Contém CPF, nome, data de nascimento, e-mail e senha.
+
+Mantém uma lista de reservas (self.reservas) contendo voo, assento e status.
+
+Métodos principais:
+
+criar_reserva() — adiciona uma nova reserva com validações de idade e duplicidade.
+
+cancelar_reserva() — marca uma reserva como cancelada.
+
+modificar_reserva() — permite alterar voo e assento de uma reserva existente.
+
+eh_maior_de_idade() e calcular_idade() — aplicam a regra que proíbe menores de 18 anos de ocuparem assentos de emergência.
+
+Funções carregar_usuarios(), salvar_usuarios() e salvar_usuario_unico() controlam a persistência no arquivo usuarios.txt.
+
+Classe Voo (voos.py)
+
+Representa um voo da companhia aérea.
+
+Atributos: identificador, avião associado, origem, destino, data/hora e assentos reservados.
+
+Principais métodos:
+
+reservar_assento(usuario, assento_id) — efetua a reserva com todas as validações de regras.
+
+confirmar_reserva() — registra formalmente o vínculo entre passageiro e assento.
+
+cancelar_reserva() — remove a associação entre CPF e assento.
+
+listar_assentos() — exibe todos os assentos e seus status (livre ou reservado).
+
+to_string() e from_string() — fazem a serialização e desserialização dos voos no arquivo voos.txt.
+
+As reservas são gravadas no formato assento:cpf.
+
+Classe GerenciadorVoos (voos.py)
+
+Gerencia o conjunto de voos do sistema.
+
+Permite carregar, salvar, listar e buscar voos, mantendo consistência com uso de arquivo lock.
+
+As funções carregar_voos() e salvar_voos() mantêm integridade de gravação em disco.
+
+Utiliza o arquivo dados/voos.txt para armazenamento persistente.
+
+3. INTERFACE GRÁFICA (ARQUIVO main_gui.py)
+
+Implementada com Tkinter, a interface substitui a antiga linha de comando da AD1.
+Ela permite operação completa do sistema, desde o cadastro de usuários até o cancelamento de reservas.
+
+As telas são organizadas em classes:
+
+TelaLogin — login de passageiro, com validação de CPF e senha.
+
+TelaCadastro — cadastro de novos usuários e verificação de duplicidade.
+
+TelaPainel — painel principal do usuário com visualização de dados e reservas.
+
+TelaVoos — exibe todos os voos disponíveis e permite selecionar um.
+
+TelaAssentos — mostra o layout dos assentos do voo selecionado, permitindo confirmar reservas.
+
+Todas as telas compartilham os dados centrais de:
+
+lista_avioes
+
+gerenciador_voos
+
+usuario_logado
+
+voo_selecionado
+
+Os arquivos de dados são automaticamente atualizados a cada reserva ou cancelamento.
+
+4. MÓDULO DE TESTE AUTOMATIZADO (teste_backend.py)
+
+Esse arquivo executa uma bateria de testes automáticos sobre todas as classes do backend.
+Ele:
+
+Cria um ambiente temporário com arquivos simulados de aviões, voos e usuários.
+
+Valida a criação de objetos, reservas, cancelamentos e regras de idade.
+
+Testa cenários complexos com múltiplos passageiros e modificações de reserva.
+
+Ao final, exibe um resumo indicando o sucesso dos testes.
+
+Esse módulo garante que todas as regras de negócio e persistência funcionam de forma correta.
+
+5. FORMATOS DE DADOS
+
+avioes.txt
+aviao_id;modelo;fileiras;assentos_por_fileira
+Exemplo:
+A320;Airbus A320;30;6
+
+voos.txt
+voo_id;aviao_id;origem;destino;data_hora;assento:cpf
+Exemplo:
+V001;A320;SP;RJ;2025-12-15 14:00;9F:123.456.789-00
+
+usuarios.txt
+cpf;nome;data_nascimento;email;senha;reservas
+Reservas: pares voo_id-assento separados por vírgula.
+Exemplo:
+123.456.789-00;Teste;01/01/1990;teste@teste.com;1234;V001-9F,V002-10A
+
+6. CONCLUSÃO
+
+O sistema final da AD2 implementa:
+
+Estrutura de classes completa e coesa;
+
+Regras de negócio aplicadas integralmente;
+
+Persistência segura em arquivos texto;
+
+Interface gráfica interativa e funcional;
+
+Módulo de testes automatizado validando toda a lógica.
+
+Trata-se de uma evolução completa da versão anterior (AD1), agora com controle visual, gerenciamento persistente de usuários e voos, e verificação de integridade em tempo real.
+Todos os arquivos fornecidos no envio são necessários para o funcionamento integral e a avaliação do sistema.

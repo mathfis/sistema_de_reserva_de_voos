@@ -1,1 +1,5 @@
 A320;Airbus A320;30;6
+B737;Boeing 737;32;6
+E190;Embraer E190;25;4
+A319;Airbus A319;28;6
+B738;Boeing 737-800;33;6

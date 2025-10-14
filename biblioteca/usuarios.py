@@ -40,7 +40,7 @@ class Usuario:
         if assento_info and 'emergencia' in assento_info:
             is_emergencia = assento_info['emergencia']
         else:
-            # Fallback: verifica pelo ID do assento (prefixo 'E' ou fileiras de emergência)
+            # Verificar pelo ID do assento (prefixo 'E' ou fileiras de emergência)
             is_emergencia = assento_id.upper().startswith('E')
         
         if is_emergencia and not self.eh_maior_de_idade():
@@ -197,21 +197,3 @@ def salvar_usuario_unico(novo_usuario: Usuario):
 
     with open(caminho, 'a', encoding='utf-8') as f:
         f.write(linha)
-
-
-# TESTE SIMPLES
-if __name__ == "__main__":
-    # Teste básico
-    try:
-        usuario = Usuario("52998224725", "Maria Silva", "15/05/1995", "maria@email.com")
-        usuario.criar_reserva("V123", "A15")
-        print("OK! Usuario e reserva criados com sucesso")
-        print(f"OK! Maior de idade: {usuario.eh_maior_de_idade()}")
-        
-        # Teste persistência
-        salvar_usuarios([usuario])
-        usuarios_carregados = carregar_usuarios()
-        print(f"OK! {len(usuarios_carregados)} usuarios carregados")
-        
-    except Exception as e:
-        print(f"ERRO: {e}")

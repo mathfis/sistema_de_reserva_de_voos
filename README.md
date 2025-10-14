@@ -8,229 +8,219 @@ _____________
 
 ## 📘 Visão Geral
 
-Este projeto implementa um **sistema de reservas de assentos em voos comerciais**, utilizando **Python e orientação a objetos**.  
+📘 Visão Geral
 
-Na **AD1**, foi desenvolvido o **backend completo**, com persistência em arquivos texto e interface em linha de comando (CLI).  
-Na **AD2**, está sendo implementada a **interface gráfica (frontend)** em **Tkinter**, que permitirá ao usuário interagir visualmente com o sistema.
+Este projeto implementa um sistema completo de reservas de assentos em voos comerciais, desenvolvido em Python com orientação a objetos e interface gráfica em Tkinter.
+
+A aplicação permite cadastro e login de usuários, listagem de voos, seleção visual de assentos e confirmação de reservas, com persistência local em arquivos .txt.
+
+O sistema foi desenvolvido em duas etapas:
+
+AD1: Backend funcional com linha de comando (CLI)
+
+AD2: Integração total com interface gráfica (Tkinter)
+
+### 🧮 Diagrama de Classes
+
+    O sistema segue um modelo orientado a objetos, em que cada classe representa um elemento real do domínio (usuário, voo, avião).
+    O diagrama abaixo descreve as principais classes e suas relações:
+
+```mermaid
+classDiagram
+    class Usuario {
+        - str cpf
+        - str nome
+        - str data_nascimento
+        - str email
+        - str senha
+        - list reservas
+        + criar_reserva(voo_id, assento_id, info)
+        + cancelar_reserva(voo_id, assento_id)
+        + eh_maior_de_idade()
+    }
+
+    class Aviao {
+        - str aviao_id
+        - str modelo
+        - int fileiras
+        - int assentos_por_fileira
+        + gerar_layout()
+        + validar_assento(assento_id)
+    }
+
+    class Voo {
+        - str voo_id
+        - Aviao aviao
+        - str origem
+        - str destino
+        - str data_hora
+        - dict assentos_reservados
+        + reservar_assento(usuario, assento_id)
+        + cancelar_reserva(usuario, assento_id)
+        + listar_assentos()
+        + to_string()
+    }
+
+    class GerenciadorVoos {
+        - dict voos
+        + carregar_voos(lista_avioes)
+        + salvar_voos()
+        + listar_voos()
+        + buscar_voos(origem, destino, data)
+        + obter_voo(voo_id)
+    }
+
+    Usuario "1" --> "*" Voo : faz reservas
+    Voo "1" --> "1" Aviao : utiliza
+    GerenciadorVoos "1" --> "*" Voo : gerencia
+```
+Descrição:
+
+- Usuario gerencia suas próprias reservas e validações de idade.
+- Voo mantém o controle dos assentos reservados e a ligação com o avião correspondente.
+- Aviao define o layout e as regras dos assentos (incluindo emergências e bloqueios).
+- GerenciadorVoos coordena todos os voos existentes e realiza persistência em arquivo.
 
 ---
 
-## 💡 Estágio Atual (AD2)
+## 💻 Estado Atual (AD2 – Sistema Concluído)
 
-O sistema gráfico está **100% operacional** — já é possível **navegar entre as telas principais** e validar os **fluxos visuais**.  
-Nenhuma parte ainda acessa o backend, mas toda a estrutura está pronta para receber integração.
+O sistema está 100% funcional e integrado:
 
-### 🧭 Estrutura atual
+- Permite cadastro e autenticação real de usuários
+- Exibe voos carregados de arquivo
+- Gera o layout de assentos dinamicamente
+- Garante as regras de negócio (ex.: menores não podem ocupar assentos de emergência)
+- Sincroniza reservas entre o usuário e o voo automaticamente
+- Persiste todos os dados em arquivos de texto simples
+
+### 🧭 Estrutura de Telas (Interface Tkinter)
 
 ```graphql
 App (tk.Tk)
 │
 ├── TelaLogin
-│ ├── Campo CPF
-│ ├── Campo Senha
-│ ├── Botões: Entrar / Cadastrar
+│   ├── CPF / Senha
+│   └── Botões: Entrar / Cadastrar
 │
 ├── TelaCadastro
-│ ├── Campos: CPF, Nome, Data, Email
-│ ├── Botões: Salvar / Voltar
+│   ├── Campos: CPF, Nome, Data, Email, Senha
+│   └── Botões: Salvar / Voltar
 │
-└── TelaPainel
-├── Botões: Visualizar Voos / Minhas Reservas / Sair
-```
-
-### 🖼️ Fluxo de Navegação
-
-```shell
-[ TelaLogin ]
-↓
-[ TelaCadastro ] ←→ [ TelaPainel ]
-```
-
----
-
-## ✈️ Próximas Etapas (Planejamento de Implementação)
-
-| Etapa | Tarefa | Backend Necessário? | Descrição |
-|-------|---------|----------------------|------------|
-| 2 | ✅ Autenticação real de usuário | ✅ | Ler `dados/usuarios.txt`, verificar CPF com `carregar_usuarios()` e permitir login real. |
-| 3 | ✅ Cadastro real de novo usuário | ✅ | Criar novo `Usuario`, validar CPF e salvar com `salvar_usuarios()`. |
-| 4 | 🛫 Tela de seleção de voos | ✅ | Listar voos de `GerenciadorVoos.listar_voos()` e exibir dados (origem, destino, data). |
-| 5 | 💺 Tela de seleção de assentos | ✅ | Exibir layout do avião (`Aviao.gerar_layout()`), colorindo por status (livre/reservado/emergência). |
-| 6 | 💳 Tela de confirmação de reserva | ✅ | Mostrar resumo (voo + assento + valor) e confirmar reserva (`Usuario.criar_reserva()` + `Voo.reservar_assento()`). |
-| 7 | 📋 Tela “Minhas Reservas” | ✅ | Exibir reservas do usuário logado e permitir cancelar/modificar (`Usuario.cancelar_reserva()`). |
-| 8 | 🎨 Refinamento visual | ❌ | Ajustar layout, cores, ícones e responsividade. |
-| 9 | 🧪 Testes e Validação | ❌ | Testar fluxos (login, reserva, cancelamento, etc.). |
-
----
-
-## 📊 Mapa de Progresso
-
-| Categoria | Progresso |
-|------------|------------|
-| Estrutura base (Tkinter + navegação) | 🟢 100% |
-| Login e cadastro visuais | 🟢 100% |
-| Integração com backend (usuário, voos, assentos) | 🟡 0% |
-| Layout visual de assentos | ⚪ 0% |
-| Confirmação e persistência | ⚪ 0% |
-| Testes e ajustes finais | ⚪ 0% |
-
----
-
-## 🧩 Estrutura Final Planejada
-```graphql
-App (tk.Tk)
-│
-├── TelaLogin → autenticação via carregar_usuarios()
-├── TelaCadastro → criação via salvar_usuarios()
-├── TelaPainel → acesso a TelaVoos / TelaReservas
+├── TelaPainel
+│   ├── Exibe dados do usuário
+│   ├── Botões: Visualizar Voos / Minhas Reservas / Sair
 │
 ├── TelaVoos
-│ ├── Lista de voos (origem, destino, data)
-│ └── Seleção → TelaAssentos
+│   ├── Lista dinâmica de voos (origem, destino, data, avião)
+│   └── Botão: Selecionar
 │
-├── TelaAssentos
-│ ├── Layout visual (grid de botões)
-│ ├── Cores: verde=livre, vermelho=ocupado, amarelo=emergência
-│ └── Selecionar assento → TelaPagamento
-│
-├── TelaPagamento
-│ ├── Resumo (voo + assento + valor)
-│ └── Confirmação → salvar reserva
-│
-└── TelaReservas
-├── Listagem de reservas do usuário
-└── Cancelar / Alterar assento
+└── TelaAssentos
+    ├── Layout visual interativo (botões coloridos)
+    ├── Cores: verde=livre, vermelho=ocupado, laranja=emergência
+    └── Botões: Confirmar Reserva / Voltar
 ```
+
+## 💺 Funcionalidades Implementadas
+
+
+| Módulo                 | Funcionalidade                                        | Status |
+| ---------------------- | ----------------------------------------------------- | ------ |
+| Login / Cadastro       | Autenticação e criação real de usuários               | ✅      |
+| Painel do Usuário      | Exibe dados e reservas ativas                         | ✅      |
+| Listagem de Voos       | Carregamento dinâmico de `voos.txt`                   | ✅      |
+| Seleção de Assentos    | Interface visual e validação de disponibilidade       | ✅      |
+| Confirmação de Reserva | Sincronização entre usuário e voo                     | ✅      |
+| Persistência           | Atualização automática de `usuarios.txt` e `voos.txt` | ✅      |
+| Regras de Negócio      | Restrições por idade e bloqueios de assentos          | ✅      |
 
 ---
 
-## 🧱 Estrutura do Projeto (Backend + Frontend)
-
+## 🧱 Estrutura do Projeto
 ```graphql
 sistema_de_reserva_de_voos/
 │
 ├── biblioteca/
-│   ├── avioes.py
-│   ├── usuarios.py
-│   └── voos.py
+│   ├── avioes.py       # Classe Aviao e funções de layout
+│   ├── usuarios.py     # Classe Usuario e manipulação de cadastro
+│   └── voos.py         # Classe Voo e GerenciadorVoos
 │
 ├── dados/
 │   ├── avioes.txt
 │   ├── usuarios.txt
 │   └── voos.txt
 │
-├── cli_simulada.py 
-├── main.py                 # CLI (AD1)
-├── main_gui.py             # GUI (Tkinter – AD2)
+├── main.py             # Interface Tkinter (AD2)         
+├── teste_backend.py         
+├── roteiro_de_testagem.md
 └── README.md
+
 ```
 
-## ⚙️ Execução (na CLI)
+---
 
-### 🔹 Requisitos
+## ⚙️ Como Executar
+🔹 Requisitos
+- Python 3.8 ou superior
+- Nenhuma biblioteca externa (usa apenas o módulo padrão tkinter)
+- Compatível com Windows e Linux
 
-Python 3.8 ou superior
+### 🔹 Execução Automática (CLI)
 
-Sistema operacional Linux (recomendado) ou Windows
+- Copie a pasta para o seu diretório local
+- Execute teste_backend.py
 
-Nenhuma dependência externa (usa apenas módulos padrão do Python)
+```bash
+python teste_backend.py
+```
 
-### 🔹 Execução Interativa (CLI)
+O arquivo vai mostrar na CLI um conjunto de passos que foram dados para testar as funcionalidades do backend
 
-Para usar o sistema manualmente, execute:
+### 🔹 Execução da Interface Gráfica e Interativa (GUI)
+
+- Na pasta raiz do projeto, execute:
 
 ```bash
 python main.py
 ```
-O programa exibirá o menu principal com as opções de:
+- Teste as funcionalidades do Sistema ou siga o roteiro em roteiro_de_testagem.md, contido no projeto
 
-- Cadastro de usuário;
-- Login;
-- Visualização de voos e assentos;
-- Reserva, cancelamento e modificação de assentos.
+🔹 Fluxo de Uso
 
-### 🔹 Execução Automática (Simulada)
+1. Cadastre um novo usuário
+2. Faça login
+3. Escolha um voo disponível
+4. Selecione um assento livre
+5. Confirme a reserva
 
-Para testar o sistema de ponta a ponta:
+    Os arquivos usuarios.txt e voos.txt serão atualizados automaticamente.
 
-```bash
-python cli_simulada.py
+## 💾 Estrutura dos Arquivos de Dados
+| Arquivo          | Campos                                              | Exemplo                                                      |
+| ---------------- | --------------------------------------------------- | ------------------------------------------------------------ |
+| **avioes.txt**   | `aviao_id;modelo;fileiras;assentos_por_fileira`     | `A320;Airbus A320;30;6`                                      |
+| **voos.txt**     | `voo_id;aviao_id;origem;destino;data_hora;reservas` | `V001;A320;SP;RJ;2025-12-15 14:00;6F:123.456.789-00`         |
+| **usuarios.txt** | `cpf;nome;data_nascimento;email;senha;reservas`     | `123.456.789-00;João;01/01/1990;joao@email.com;1234;V001-6F` |
+
+
+## 🧩 Principais Classes e Responsabilidades
+
+| Classe              | Arquivo       | Responsabilidade                                                    |
+| ------------------- | ------------- | ------------------------------------------------------------------- |
+| **Aviao**           | `avioes.py`   | Gera layout de assentos, define posições, bloqueios e valores       |
+| **Usuario**         | `usuarios.py` | Modela passageiro, valida CPF e gerencia reservas                   |
+| **Voo**             | `voos.py`     | Controla reservas de assentos e valida disponibilidade              |
+| **GerenciadorVoos** | `voos.py`     | Lê, grava e sincroniza voos em arquivo com controle `.lock`         |
+| **App / Telas**     | `main_gui.py` | Interface gráfica Tkinter (login, cadastro, voos, assentos, painel) |
+
+
+## 📊 Arquitetura do Sistema
+
+
+```text
+Usuário ⇄ Interface Tkinter ⇄ Backend Orientado a Objetos ⇄ Arquivos TXT
 ```
-A simulação executa automaticamente:
-
-1. Criação de usuários
-
-2. Criação de aviões e voos
-
-3. Teste de login e regras de idade
-
-4. Visualização de layout
-
-5. Reserva e cancelamento de assentos
-
-6. Modificação de reserva
-
-7. Relatório final de status
-
-## 🧠 Principais Componentes
-### ✈️ Aviao – (arquivo biblioteca/avioes.py)
-
-- Representa uma aeronave e gera o layout completo de assentos.
-- Gera posições, classes e valores automaticamente.
-- Define assentos de emergência e bloqueios.
-- Valida existência de assentos.
-- Permite salvar e carregar lista de aviões em arquivo texto.
-
-### 👤 Usuario – (arquivo biblioteca/usuarios.py)
-
-- Modela um passageiro e suas reservas.
-- Valida CPF e idade.
-- Cria, modifica e cancela reservas.
-- Impede menores de 18 anos de ocuparem assentos de emergência.
-- Armazena reservas persistentes em dados/usuarios.txt.
-
-### 🛫 Voo – (arquivo biblioteca/voos.py)
-
-- Gerencia um voo individual e suas reservas.
-- Valida assentos e controla status (livre/reservado).
-- Associa cada reserva a um usuário (CPF).
-- Possui serialização e leitura de arquivo texto.
-
-###📋 GerenciadorVoos
-
-- Gerencia a coleção completa de voos.
-- Carrega e salva voos com controle de concorrência (.lock).
-- Permite buscar, adicionar e listar voos.
-
-### 💻 main.py
-
-- Interface principal em linha de comando.
-- Exibe menus interativos.
-- Executa todas as operações do sistema.
-
-    É o ponto de entrada principal do programa.
-
-### 🔁 cli_simulada.py
-
-- Executa um teste automatizado de ponta a ponta do sistema.
-    Serve para validar a consistência da lógica antes da integração com o frontend Tkinter.
-
-### 💾 Estrutura dos Arquivos de Dados
-| Arquivo          | Formato                                         | Exemplo                                                       |
-| ---------------- | ----------------------------------------------- | ------------------------------------------------------------- |
-| **avioes.txt**   | `aviao_id;modelo;fileiras;assentos_por_fileira` | `BOEING-001;B737;30;6`                                        |
-| **voos.txt**     | `voo_id;aviao_id;origem;destino;data_hora`      | `V001;BOEING-001;São Paulo;Rio de Janeiro;2024-03-15 08:00`   |
-| **usuarios.txt** | `cpf;nome;data_nascimento;email;reservas`       | `529.982.247-25;João Silva;15/05/1990;joao@email.com;V001-7C` |
-
-    As reservas são armazenadas como pares voo_id-assento, separados por vírgulas.
-
-### 🧱 Organização por Camadas
-
-| Camada                | Responsável             | Arquivos                     |
-| --------------------- | ----------------------- | ---------------------------- |
-| **Interface (CLI)**   | Interação com o usuário | `main.py`, `cli_simulada.py` |
-| **Lógica de Negócio** | Regras e operações      | `biblioteca/*.py`            |
-| **Persistência**      | Armazenamento em texto  | `dados/*.txt`                |
+    O sistema mantém a coerência entre os dados do usuário e os registros de voo, evitando inconsistências mesmo após múltiplas reservas.
 
 
 ## 🚀 Próximos Passos (AD2)

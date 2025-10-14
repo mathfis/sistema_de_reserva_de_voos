@@ -1,3 +1,6 @@
+# /biblioteca/voos.py
+
+from datetime import datetime
 import os
 import time
 
@@ -9,7 +12,8 @@ class Voo:
         self.destino = destino
         self.data_hora = data_hora
         self.assentos_reservados = {}  # assento_id: usuario_cpf
-    
+        self.reservas = []
+
     def reservar_assento(self, usuario, assento_id):
         """
         Reserva um assento para o usuário
@@ -19,6 +23,12 @@ class Voo:
         if not self.aviao.validar_assento(assento_id):
             raise ValueError("Assento {} inválido para este avião".format(assento_id))
         
+        # ✅ CORREÇÃO CRÍTICA: Verificar se o usuário já tem QUALQUER reserva neste voo
+        for reservado_cpf in self.assentos_reservados.values():
+            if reservado_cpf == usuario.cpf:
+                raise ValueError(
+                    f"Usuário já possui uma reserva neste voo. Cada passageiro pode ter apenas um assento por voo.")
+
         # Verifica se o assento já está reservado
         if assento_id in self.assentos_reservados:
             return False
@@ -36,10 +46,30 @@ class Voo:
             if assento_info.get('bloqueado', False):
                 raise ValueError("Assento {} indisponível".format(assento_id))
         
-        # Cria a reserva
+        # Registrar reserva no sistema do voo
         self.assentos_reservados[assento_id] = usuario.cpf
+        
+        # Também registrar no sistema de reservas do voo
+        self.confirmar_reserva(usuario.cpf, assento_id)
+
         return True
-    
+
+    def confirmar_reserva(self, usuario_cpf: str, assento_id: str):
+        """
+        Registra a reserva no voo, associando o CPF do usuário ao assento.
+        """
+        if not hasattr(self, "reservas"):
+            self.reservas = []
+
+        registro = {
+            "usuario_cpf": usuario_cpf,
+            "assento_id": assento_id,
+            "data_reserva": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+            "status": "confirmada"
+        }
+
+        self.reservas.append(registro)
+
     def cancelar_reserva(self, usuario, assento_id):
         """
         Cancela a reserva de um assento
@@ -75,16 +105,25 @@ class Voo:
     
     def to_string(self):
         """Converte o voo para string no formato de arquivo"""
-        return "{};{};{};{};{}".format(self.voo_id, self.aviao.aviao_id, self.origem, self.destino, self.data_hora)
+        base = "{};{};{};{};{}".format(self.voo_id, self.aviao.aviao_id, self.origem, self.destino, self.data_hora)
+        
+        # ✅ ADICIONAR: Incluir assentos reservados na serialização
+        if self.assentos_reservados:
+            reservas_str = ",".join([f"{assento}:{cpf}" for assento, cpf in self.assentos_reservados.items()])
+            base += f";{reservas_str}"
+
+        return base
     
     @classmethod
     def from_string(cls, linha, avioes_list):
-        """Cria um objeto Voo a partir de uma string do arquivo"""
+        """Cria um objeto Voo a partir de uma string do arquivo - VERSÃO CORRIGIDA"""
         dados = linha.strip().split(';')
-        if len(dados) != 5:
-            raise ValueError("Formato de linha inválido")
         
-        voo_id, aviao_id, origem, destino, data_hora = dados
+        # ✅ CORREÇÃO: Aceitar de 5 a 6 campos (com ou sem reservas)
+        if len(dados) < 5:
+            raise ValueError("Formato de linha inválido - mínimo 5 campos requeridos")
+            
+        voo_id, aviao_id, origem, destino, data_hora = dados[:5]
         
         # Encontrar o avião correspondente
         aviao_encontrado = None
@@ -94,10 +133,28 @@ class Voo:
                 break
         
         if not aviao_encontrado:
-            raise ValueError("Avião {} não encontrado".format(aviao_id))
+            print(f"⚠️  Avião {aviao_id} não encontrado para voo {voo_id}")
+            return None  # ✅ CORREÇÃO: Retorna None em vez de erro
         
-        return cls(voo_id, aviao_encontrado, origem, destino, data_hora)
+        voo = cls(voo_id, aviao_encontrado, origem, destino, data_hora)
 
+        # ✅ CORREÇÃO MELHORADA: Carregar assentos reservados se existirem (campo 6)
+        if len(dados) > 5 and dados[5].strip():
+            reservas_str = dados[5].strip()
+            print(f"📝 Carregando reservas para voo {voo_id}: {reservas_str}")
+            
+            for reserva in reservas_str.split(','):
+                if ':' in reserva:
+                    try:
+                        assento_id, usuario_cpf = reserva.split(':', 1)
+                        voo.assentos_reservados[assento_id] = usuario_cpf
+                        print(f"   ✅ Reserva carregada: {assento_id} → {usuario_cpf}")
+                    except ValueError as e:
+                        print(f"⚠️  Formato de reserva inválido: {reserva} - {e}")
+                else:
+                    print(f"⚠️  Formato de reserva inválido (sem ':'): {reserva}")
+
+        return voo
 
 # Gerenciador de voos com persistência
 class GerenciadorVoos:
@@ -107,32 +164,43 @@ class GerenciadorVoos:
         self.lock_file = caminho_arquivo + ".lock"
     
     def carregar_voos(self, avioes_list):
-        """Carrega voos do arquivo com controle de concorrência"""
+        """Carrega voos do arquivo com controle de concorrência - VERSÃO CORRIGIDA"""
         while os.path.exists(self.lock_file):
-            time.sleep(0.1)  # Espera se o arquivo estiver bloqueado
+            time.sleep(0.1)
         
         try:
-            # Cria arquivo lock
             with open(self.lock_file, 'w') as f:
                 f.write("locked")
             
             if not os.path.exists(self.caminho_arquivo):
+                print("📁 Arquivo de voos não encontrado")
                 return
             
             self.voos = {}
             with open(self.caminho_arquivo, 'r', encoding='utf-8') as f:
-                for linha in f:
+                for i, linha in enumerate(f, 1):
+                    linha = linha.strip()
+                    if not linha:  # Pula linhas vazias
+                        continue
+                        
                     try:
                         voo = Voo.from_string(linha, avioes_list)
-                        self.voos[voo.voo_id] = voo
+                        if voo:  # ✅ CORREÇÃO: Só adiciona se não for None
+                            self.voos[voo.voo_id] = voo
+                            print(f"✅ Voo carregado: {voo.voo_id}")
+                        else:
+                            print(f"❌ Voo não carregado (avião não encontrado)")
+                            
                     except ValueError as e:
-                        print("Erro ao carregar voo: {}".format(e))
+                        print(f"❌ Erro na linha {i}: {e} - Linha: {linha}")
+                        
+            print(f"📊 Total de voos carregados: {len(self.voos)}")
                         
         finally:
-            # Remove arquivo lock
             if os.path.exists(self.lock_file):
                 os.remove(self.lock_file)
-    
+
+
     def salvar_voos(self):
         """Salva voos no arquivo com controle de concorrência"""
         while os.path.exists(self.lock_file):
